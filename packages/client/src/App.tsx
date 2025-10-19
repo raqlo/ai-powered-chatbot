@@ -1,5 +1,6 @@
 import {useEffect, useState} from 'react'
 import './App.css'
+import {Button} from "./components/ui/button";
 
 function App() {
     const [message, setMessage] = useState('');
@@ -11,7 +12,10 @@ function App() {
             .catch(error => console.error('Error fetching data:', error))
     },[])
 
-    return <p className="font-bold">{message}</p>
+    return <>
+    <p className="font-bold">{message}</p>
+    <Button variant="outline">Button</Button>
+    </>
 }
 
 export default App
