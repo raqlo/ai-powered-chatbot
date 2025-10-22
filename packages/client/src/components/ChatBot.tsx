@@ -1,7 +1,8 @@
 import { Button } from './ui/button';
 import { FaArrowUp } from 'react-icons/fa';
+import ReactMarkdown from 'react-markdown';
 import { type SubmitHandler, useForm } from 'react-hook-form';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 
 interface IFormInput {
@@ -20,15 +21,24 @@ type Message = {
 export const ChatBot = () => {
    const conversationId = useRef(crypto.randomUUID());
    const [messages, setMessages] = useState<Message[]>([]);
+   const formRef = useRef<HTMLFormElement | null>(null);
+   const [isBotTyping, setIsBotTyping] = useState(false);
    const { register, handleSubmit, reset, formState } = useForm<IFormInput>();
+
+   useEffect(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth' });
+   }, [messages]);
+
    const onSubmit: SubmitHandler<IFormInput> = async ({ prompt }) => {
       setMessages((prev) => [...prev, { content: prompt, role: 'user' }]);
+      setIsBotTyping(true);
       reset();
       const { data } = await axios.post<ChatResponse>('/api/chat', {
          prompt,
          conversationId: conversationId.current,
       });
       setMessages((prev) => [...prev, { content: data.message, role: 'bot' }]);
+      setIsBotTyping(false);
    };
 
    const onKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
@@ -38,6 +48,16 @@ export const ChatBot = () => {
       }
    };
 
+   function onCopyMessage() {
+      return (e: React.ClipboardEvent<HTMLParagraphElement>) => {
+         const selection = window.getSelection()?.toString().trim();
+         if (selection) {
+            e.preventDefault();
+            e.clipboardData?.setData('text/plain', selection);
+         }
+      };
+   }
+
    return (
       <div>
          <div
@@ -46,17 +66,30 @@ export const ChatBot = () => {
             {messages.map((message, index) => (
                <p
                   key={index}
+                  onCopy={onCopyMessage}
                   className={`px-3 py-1 rounded-xl ${
                      message.role === 'user'
                         ? 'bg-blue-600 text-white self-end'
                         : 'bg-gray-100 text-black self-start'
                   }`}
                >
-                  {message.content}
+                  <ReactMarkdown>{message.content}</ReactMarkdown>
                </p>
             ))}
+            {isBotTyping && (
+               <div
+                  className={
+                     'flex gap-1 self-start px-3 py-3 bg-gray-200 rounded-xl'
+                  }
+               >
+                  <div className="w-2 h-2 bg-gray-800 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-gray-800 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                  <div className="w-2 h-2 bg-gray-800 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+               </div>
+            )}
          </div>
          <form
+            ref={formRef}
             onSubmit={handleSubmit(onSubmit)}
             onKeyDown={onKeyDown}
             className="flex flex-col gap-2 items-end border-2 p-4 rounded-xl"
