@@ -21,6 +21,7 @@ type Message = {
 export const ChatBot = () => {
    const conversationId = useRef(crypto.randomUUID());
    const [messages, setMessages] = useState<Message[]>([]);
+   const [error, setError] = useState<string>('');
    const lastMessageRef = useRef<HTMLDivElement | null>(null);
    const [isBotTyping, setIsBotTyping] = useState(false);
    const { register, handleSubmit, reset, formState } = useForm<IFormInput>();
@@ -30,15 +31,25 @@ export const ChatBot = () => {
    }, [messages]);
 
    const onSubmit: SubmitHandler<IFormInput> = async ({ prompt }) => {
-      setMessages((prev) => [...prev, { content: prompt, role: 'user' }]);
-      setIsBotTyping(true);
-      reset({ prompt: '' });
-      const { data } = await axios.post<ChatResponse>('/api/chat', {
-         prompt,
-         conversationId: conversationId.current,
-      });
-      setMessages((prev) => [...prev, { content: data.message, role: 'bot' }]);
-      setIsBotTyping(false);
+      try {
+         setError('');
+         setMessages((prev) => [...prev, { content: prompt, role: 'user' }]);
+         setIsBotTyping(true);
+         reset({ prompt: '' });
+         const { data } = await axios.post<ChatResponse>('/api/chatx', {
+            prompt,
+            conversationId: conversationId.current,
+         });
+         setMessages((prev) => [
+            ...prev,
+            { content: data.message, role: 'bot' },
+         ]);
+      } catch (err) {
+         console.error('Error sending message:', err);
+         setError('Something went wrong. Please try again later.');
+      } finally {
+         setIsBotTyping(false);
+      }
    };
 
    const onKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
@@ -84,6 +95,11 @@ export const ChatBot = () => {
                   <div className="w-2 h-2 bg-gray-800 rounded-full animate-bounce"></div>
                   <div className="w-2 h-2 bg-gray-800 rounded-full animate-bounce [animation-delay:0.2s]"></div>
                   <div className="w-2 h-2 bg-gray-800 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+               </div>
+            )}
+            {error && (
+               <div className="px-3 py-1 rounded-xl bg-red-600 text-white self-start">
+                  {error}
                </div>
             )}
          </div>
