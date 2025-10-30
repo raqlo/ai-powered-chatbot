@@ -1,5 +1,6 @@
 import {OpenAI} from "openai/client";
 import {reviewRepository} from "../repositories/review.respository";
+import {llmClient} from "../llm/client";
 
 export const reviewService = {
     async getReviews(productId: number) {
@@ -13,13 +14,13 @@ export const reviewService = {
         
         ${joinedReviews}`
 
-        const response = await client.responses.create({
+        const response =  await llmClient.generateText({
             model: 'gpt-4o-mini',
             input: prompt,
             temperature: 0.2,
-            max_output_tokens: 500,
-        })
-        return response.output_text;
+            maxTokens: 500,
+        });
+        return response.text;
     }
 };
 
