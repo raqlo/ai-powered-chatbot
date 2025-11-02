@@ -1,7 +1,7 @@
 import axios from "axios";
-import {useEffect, useState} from "react";
 import {StarRating} from "./StarRating";
 import Skeleton from 'react-loading-skeleton'
+import {useQuery} from '@tanstack/react-query'
 
 
 type Props = {
@@ -22,29 +22,18 @@ type GetReviewsResponse = {
 }
 
 export const ReviewList = ({productId}: Props) => {
-    const [reviewData, setReviewData] = useState<GetReviewsResponse>();
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
+
+    const {data: reviewData, isLoading, error} = useQuery<GetReviewsResponse>({
+        queryKey: ['reviews', productId],
+        queryFn: () => fetchReviews()
+    });
 
     const fetchReviews = async () => {
-        try {
-
-            setError('')
-            setLoading(true)
-            const {data} = await axios.get<GetReviewsResponse>(`/api/products/${productId}/reviews`);
-            setReviewData(data);
-        } catch (err) {
-            setError('Failed to fetch reviews')
-        } finally {
-            setLoading(false)
-        }
+        const {data} = await axios.get<GetReviewsResponse>(`/api/products/${productId}/reviews`);
+        return data;
     }
 
-    useEffect(() => {
-        fetchReviews();
-    }, []);
-
-    if (loading) return <div className='flex flex-col gap-5'>
+    if (isLoading) return <div className='flex flex-col gap-5'>
         {[1, 2, 3].map(i => (<div key={i}>
             <Skeleton width={150}/>
             <Skeleton width={100}/>
@@ -52,7 +41,7 @@ export const ReviewList = ({productId}: Props) => {
         </div>))}
     </div>
 
-    if (error) return <p className='text-red-500'>{error}</p>
+    if (error) return <p className='text-red-500'>Could not fetch reviews. Try again.</p>
 
     return <div className="flex flex-col gap-5">
         {reviewData?.reviews.map(review =>
