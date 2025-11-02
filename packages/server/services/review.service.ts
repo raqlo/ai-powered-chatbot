@@ -4,14 +4,9 @@ import {llmClient} from "../llm/client";
 import template from '../prompts/summarize-reviews.txt'
 
 export const reviewService = {
-    async getReviews(productId: number) {
-        return reviewRepository.getReviews(productId);
-    },
     async summarizeReviews(productId: number): Promise<string> {
         const existingSummary = await reviewRepository.getReviewSummary(productId);
-        if(existingSummary && existingSummary.expiresAt > new Date()) {
-            return existingSummary.content
-        }
+        if(existingSummary) return existingSummary;
 
         const reviews = await reviewRepository.getReviews(productId, 10);
         const joinedReviews = reviews.map(r => r.content).join('\n\n');
