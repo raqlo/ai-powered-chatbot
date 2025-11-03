@@ -2,3 +2,5 @@ Summarize the following customer reviews into a short paragraph highlighting key
 both positive and negative:
 
 {{reviews}}
+
+Keep it short and sweet!

@@ -20,8 +20,7 @@ export const reviewController = {
         }
 
         const reviews = await reviewRepository.getReviews(productId);
-        const summary = reviewRepository.getReviewSummary(productId)
-
+        const summary = await reviewRepository.getReviewSummary(productId)
         res.json({
             reviews,
             summary

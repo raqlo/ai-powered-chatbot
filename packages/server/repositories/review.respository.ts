@@ -39,7 +39,6 @@ export const reviewRepository = {
                 ]
             }
         })
-
         return summary ? summary.content : null;
     }
 };
